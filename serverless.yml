@@ -66,6 +66,9 @@ functions:
     handler: bin/docs
     events:
       - http:
+          path: /
+          method: get
+      - http:
           path: /{docId}
           method: get
           request:

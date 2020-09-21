@@ -74,7 +74,10 @@ func getTemplate() (tmpl *template.Template, err error) {
 // Handler is our lambda handler invoked by the `lambda.Start` function call
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Response, error) {
 
-	docId := request.PathParameters["docId"]
+	docId, ok := request.PathParameters["docId"]
+	if !ok {
+		docId = "index"
+	}
 
 	rev, err := ds.GetDoc(docId)
 	if err != nil {
