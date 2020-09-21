@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"text/template"
 	"io/ioutil"
 	"log"
 	"strings"
+	"text/template"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -24,22 +24,11 @@ type Response events.APIGatewayProxyResponse
 
 type docMetadata struct {
 	Title, DocBody, Timestamp string
-	Version int
+	Version                   int
 }
 
 const (
 	tmplDocName = "doc-template.html"
-	headerTmpl = `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <title>%s</title>
-
-  </head>
-  <body>`
-	footerTmpl = `  </body>
-</html>`
 )
 
 var (
@@ -59,16 +48,16 @@ func firstLine(b []byte) string {
 func getTemplate() (tmpl *template.Template, err error) {
 	tmplDoc, err := ds.GetDoc(tmplDocName)
 	if err != nil {
-		return 
+		return
 	}
 
 	tmplBytes, err := ioutil.ReadAll(tmplDoc)
 	if err != nil {
-		return 
+		return
 	}
 
 	tmpl, err = template.New("docPage").Parse(string(tmplBytes))
-	return 	
+	return
 }
 
 // Handler is our lambda handler invoked by the `lambda.Start` function call
@@ -104,7 +93,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Respon
 		return resp, nil
 	}
 
-	
 	// Convert the doc's markdown to HTML
 	parsed := markdown.ToHTML(doc, nil, nil)
 
@@ -113,22 +101,22 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Respon
 	if err != nil {
 		return Response{StatusCode: 500}, err
 	}
-	
+
 	meta := docMetadata{
-		Title: firstLine(doc),
-		DocBody: string(parsed),
+		Title:     firstLine(doc),
+		DocBody:   string(parsed),
 		Timestamp: rev.Metadata().Timestamp.Format(time.RFC850),
-		Version: rev.Metadata().Id,
+		Version:   rev.Metadata().Id,
 	}
-	
-	var b bytes.Buffer		
+
+	var b bytes.Buffer
 
 	err = tmpl.Execute(&b, meta)
 
 	if err != nil {
 		return Response{StatusCode: 500}, err
 	}
-	
+
 	resp := Response{
 		StatusCode:      200,
 		IsBase64Encoded: false,
